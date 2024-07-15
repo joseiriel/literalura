@@ -22,19 +22,19 @@ public class ApiHelper {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    public BookList getBookList(String params) {
+    public List<Book> getBookList(String params) {
         var url = apiPath + "/books/";
         if (params != null) {
             url += "?" + params;
         }
-        return parse(request(url), BookList.class);
+        return parse(request(url), BookDataList.class).results().stream().map(Book::new).toList();
     }
 
     public Book getBook(int id) {
-        return parse(request(apiPath + "/book/" + id), Book.class);
+        return new Book(parse(request(apiPath + "/book/" + id), BookData.class));
     }
 
-    public BookList searchBooks(String query) {
+    public List<Book> searchBooks(String query) {
         return getBookList("search="+ query.replace(" ", "+"));
     }
 

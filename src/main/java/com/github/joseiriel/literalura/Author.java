@@ -1,15 +1,15 @@
 package com.github.joseiriel.literalura;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record Author(
-        @JsonProperty String name,
-        @JsonProperty("birth_year") int birthYear,
-        @JsonProperty("death_year") int deathYear
+        String name,
+        Integer birthYear,
+        Integer deathYear
 ) {
+    public static Author fromData(AuthorData data) {
+        return new Author(data.name(), data.birthYear(), data.deathYear());
+    }
+
     @Override public String toString() {
-        return String.format("%s (%d-%d)", name, birthYear, deathYear);
+        return String.format("%s (%s-%s)", name, birthYear != null ? birthYear : "?", deathYear != null ? deathYear : "?");
     }
 }

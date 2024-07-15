@@ -1,20 +1,27 @@
 package com.github.joseiriel.literalura;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.List;
+import java.util.Optional;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public record Book(
-        @JsonProperty int id,
-        @JsonProperty String title,
-        @JsonProperty List<Author> authors,
-        @JsonProperty List<String> languages,
-        @JsonProperty("download_count") int downloadCount
-) {
+public class Book {
+        public String title;
+        public Optional<Author> author;
+        public List<String> languages;
+        public int downloadCount;
+
+    public Book(BookData data) {
+        title = data.title();
+        if (!data.authors().isEmpty()) {
+            author = Optional.of(Author.fromData(data.authors().get(0)));
+        } else {
+            author = Optional.empty();
+        }
+        languages = data.languages();
+        downloadCount = data.downloadCount();
+    }
+
     @Override
     public String toString() {
-        return String.format("'%s'; %s", title, authors.get(0));
+        return String.format("'%s'; %s", title, author.isPresent() ? author.get() : "autor desconhecido");
     }
 }
