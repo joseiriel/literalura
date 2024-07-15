@@ -13,8 +13,9 @@ public class LiteraluraApplication implements CommandLineRunner {
 	static Scanner scanner = new Scanner(System.in);
 
 	@Autowired
-	BookRepository repo;
-	List<Book> searchedBooks = new ArrayList<>();
+	BookRepository bookRepo;
+	@Autowired
+	AuthorRepository authorRepo;
 
 	public static void main(String[] args) {
 		SpringApplication.run(LiteraluraApplication.class, args);
@@ -36,37 +37,67 @@ public class LiteraluraApplication implements CommandLineRunner {
 			}
 	}
 
+	void saveBook(Book book) {
+		var existingBook = bookRepo.findByTitle(book.title);
+		if (existingBook == null) {
+			var author = book.author();
+			var existingAuthor = authorRepo.findByName(author.name());
+			if (existingAuthor.isEmpty()) {
+				var savedAuthor = authorRepo.save(author);
+				book.setAuthor(savedAuthor);
+				savedAuthor.addBook(book);
+			} else {
+				var savedAuthor = existingAuthor.get();
+				book.setAuthor(savedAuthor);
+				savedAuthor.addBook(book);
+			}
+			bookRepo.save(book);
+		}
+	}
+
 	void searchBooks() {
 		System.out.print("Digite a sua consulta: ");
 		var query = scanner.nextLine();
-		var books = api.searchBooks(query);
-		books.stream().limit(1).forEach(System.out::println);
+		var booksData = api.searchBooks(query);
 		try {
-			var book = books.get(0);
-//			searchedBooks.add(book);
-			repo.save(book);
-		} catch (ArrayIndexOutOfBoundsException e) {
+			var bookData = booksData.get(0);
+			var book = new Book(bookData);
+			System.out.println(book);
+			saveBook(book);
+		} catch (IndexOutOfBoundsException e) {
 			System.err.println("Livro não encontrado.");
 		}
 	}
 
 	void listBooks() {
-		var books = repo.findAll();
+		var books = bookRepo.findAll();
 		if (books.isEmpty()) {
 			System.out.println("Nenhum livro foi buscado ainda.");
+			return;
 		}
 		System.out.println("Livros buscados: ");
-		books.forEach(System.out::println);
+		books.stream().sorted(Comparator.comparing(book -> book.title)).forEach(System.out::println);
 	}
 
 	void listBooksByLanguage() {
 		System.out.print("Digite a linguagem que quer buscar (ex.: en, pt): ");
 		var lang = scanner.nextLine();
-		searchedBooks.stream().filter(book -> book.languages.contains(lang)).forEach(System.out::println);
+		var list = bookRepo.findAll().stream().filter(book -> book.languages.contains(lang)).toList();
+		if (list.isEmpty()) {
+			System.out.println("Nenhum livro nessa linguagem encontrado.");
+		} else {
+			list.forEach(System.out::println);
+		}
 	}
 
 	void listAuthors() {
-		searchedBooks.stream().filter(book -> book.author.isPresent()).forEach(book -> System.out.println(book.author.orElseThrow()));
+		var list = authorRepo.findAll();
+		list.sort(Comparator.comparing(Author::name));
+		if (list.isEmpty()) {
+			System.out.println("Nenhum autor encontrado.");
+		} else {
+			list.forEach(System.out::println);
+		}
 	}
 
 	void listAuthorsAliveAtYear() {
@@ -81,14 +112,12 @@ public class LiteraluraApplication implements CommandLineRunner {
 			}
 		}
 		var year = maybeYear.orElseThrow();
-		searchedBooks.stream().filter(book -> {
-			if (book.author.isEmpty()) return false;
-			var author = book.author.get();
-			if (author.birthYear() == null || author.deathYear() == null) return false;
-			var birthYear = author.birthYear();
-			var deathYear = author.deathYear();
-			return (birthYear <= year && deathYear >= year);
-		}).forEach(book -> System.out.println(book.author.orElseThrow()));
+		var authors = authorRepo.findAliveAtYear(year);
+		if (authors.isEmpty()) {
+			System.out.println("Nenhum autor vivo nesse ano foi buscado ainda.");
+		} else {
+			authors.forEach(System.out::println);
+		}
 	}
 
 	record Action(String description, Runnable f) {}

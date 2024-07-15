@@ -1,18 +1,24 @@
 package com.github.joseiriel.literalura;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 public final class Author {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     private Long id;
+    @Column(unique = true)
     private String name;
     private Integer birthYear;
     private Integer deathYear;
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Book> books = new ArrayList<>();
+
+    public Author() {}
 
     public Author(AuthorData data) {
         name = data.name();
@@ -40,6 +46,20 @@ public final class Author {
 
     public Integer deathYear() {
         return deathYear;
+    }
+
+    public void setBooks(List<Book> books) {
+        books.forEach(livro -> livro.setAuthor(this));
+        this.books = books;
+    }
+
+    public void addBook(Book book) {
+        book.setAuthor(this);
+        this.books.add(book);
+    }
+
+    public List<Book> books() {
+        return books;
     }
 
     @Override
