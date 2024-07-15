@@ -2,7 +2,6 @@ package com.github.joseiriel.literalura;
 
 import jakarta.persistence.*;
 
-import javax.annotation.processing.Generated;
 import java.util.List;
 import java.util.Optional;
 
