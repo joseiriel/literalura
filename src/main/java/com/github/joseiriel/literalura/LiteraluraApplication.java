@@ -87,6 +87,7 @@ public class LiteraluraApplication implements CommandLineRunner {
 			System.out.println("Nenhum livro nessa linguagem encontrado.");
 		} else {
 			list.forEach(System.out::println);
+			System.out.printf("Total: %d livros nesta linguagem.\n", list.size());
 		}
 	}
 
