@@ -41,15 +41,22 @@ public class LiteraluraApplication implements CommandLineRunner {
 		var query = scanner.nextLine();
 		var books = api.searchBooks(query);
 		books.stream().limit(1).forEach(System.out::println);
-		searchedBooks.add(books.get(0));
+		try {
+			var book = books.get(0);
+//			searchedBooks.add(book);
+			repo.save(book);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.err.println("Livro não encontrado.");
+		}
 	}
 
 	void listBooks() {
-		if (searchedBooks.isEmpty()) {
+		var books = repo.findAll();
+		if (books.isEmpty()) {
 			System.out.println("Nenhum livro foi buscado ainda.");
 		}
 		System.out.println("Livros buscados: ");
-		searchedBooks.forEach(System.out::println);
+		books.forEach(System.out::println);
 	}
 
 	void listBooksByLanguage() {
