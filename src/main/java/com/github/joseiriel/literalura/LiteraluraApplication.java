@@ -5,10 +5,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 
 @SpringBootApplication
 public class LiteraluraApplication implements CommandLineRunner {
@@ -29,16 +26,18 @@ public class LiteraluraApplication implements CommandLineRunner {
 
 		for (;;) {
 			choiceMenu("Escolha uma opção: ", new Action[]{
-				new Action("Buscar livros", this::searchBooks),
+				new Action("Buscar livro", this::searchBooks),
 				new Action("Listar livros buscados", this::listBooks),
 				new Action("Listar buscados por linguagem", this::listBooksByLanguage),
+				new Action("Listar autores", this::listAuthors),
+				new Action("Listar autores vivos em ano", this::listAuthorsAliveAtYear),
 				new Action("Sair", () -> System.exit(0))
 			});
 			}
 	}
 
 	void searchBooks() {
-		System.out.print("\nDigite a sua consulta: ");
+		System.out.print("Digite a sua consulta: ");
 		var query = scanner.nextLine();
 		var books = api.searchBooks(query);
 		books.stream().limit(1).forEach(System.out::println);
@@ -60,7 +59,29 @@ public class LiteraluraApplication implements CommandLineRunner {
 	}
 
 	void listAuthors() {
+		searchedBooks.stream().filter(book -> book.author.isPresent()).forEach(book -> System.out.println(book.author.orElseThrow()));
+	}
 
+	void listAuthorsAliveAtYear() {
+		var maybeYear = OptionalInt.empty();
+		while (maybeYear.isEmpty()) {
+			System.out.print("Digite o ano que quer consultar: ");
+			var input = scanner.nextLine();
+			try {
+				maybeYear = OptionalInt.of(Integer.parseInt(input));
+			} catch (NumberFormatException e) {
+				System.err.println("Ano inválido, tente novamente.");
+			}
+		}
+		var year = maybeYear.orElseThrow();
+		searchedBooks.stream().filter(book -> {
+			if (book.author.isEmpty()) return false;
+			var author = book.author.get();
+			if (author.birthYear() == null || author.deathYear() == null) return false;
+			var birthYear = author.birthYear();
+			var deathYear = author.deathYear();
+			return (birthYear <= year && deathYear >= year);
+		}).forEach(book -> System.out.println(book.author.orElseThrow()));
 	}
 
 	record Action(String description, Runnable f) {}
