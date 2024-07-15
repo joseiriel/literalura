@@ -10,6 +10,7 @@ Projeto de catálogo de livros em linha de comando, realizado para o desafio do 
 - PostgreSQL
 - Java Persistence API
 - Jackson
+- API Gutendex.com
 
 ## Configuração
 
